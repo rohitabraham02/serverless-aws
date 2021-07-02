@@ -1,0 +1,110 @@
+
+service: myservice-sqs
+
+frameworkVersion: '2'
+
+provider:
+  name: aws
+  runtime: nodejs12.x
+  iamRoleStatements:
+    - Effect: "Allow"
+      Action:
+        - "sqs:*"
+      Resource: "*"
+    - Effect: "Allow"
+      Action:
+        - "sns:*"
+      Resource: "*"
+
+
+functions:
+  hello:
+    handler: handler.hello
+    events:
+     - http:
+         path: users/create
+         method: get
+  
+  
+  microservice1 : 
+    handler: handler.microservice1
+    events:
+      - sqs:
+          arn:aws:sqs:us-east-1:594770830557:queue1
+
+  
+  
+  
+  microservice2 : 
+    handler: handler.microservice2
+    events:
+      - sqs:
+          arn:aws:sqs:us-east-1:594770830557:queue2
+
+
+resources:
+  Resources:
+    MyQueue1: 
+      Type: AWS::SQS::Queue
+      Properties: 
+        QueueName: "queue1"
+
+    MyQueue2: 
+      Type: AWS::SQS::Queue
+      Properties: 
+        QueueName: "queue2"
+
+    MySNSTopic:
+      Type: AWS::SNS::Topic
+      Properties:
+        TopicName: "my-topic"
+
+    SNSSubscription1:
+      Type: 'AWS::SNS::Subscription'
+      Properties:
+        TopicArn: !Ref MySNSTopic
+        Endpoint: !GetAtt MyQueue1.Arn
+        Protocol: sqs
+        RawMessageDelivery: 'true'
+
+
+    SNSSubscription2:
+      Type: 'AWS::SNS::Subscription'
+      Properties:
+        TopicArn: !Ref MySNSTopic
+        Endpoint: !GetAtt MyQueue2.Arn
+        Protocol: sqs
+        RawMessageDelivery: 'true'
+
+    SampleSQSPolicy1: 
+      Type: AWS::SQS::QueuePolicy
+      Properties: 
+
+        Queues: 
+           - !Ref MyQueue1
+        PolicyDocument: 
+          Statement: 
+           - 
+             Action: "sqs:*"
+             Effect: "Allow"
+             Resource: !GetAtt MyQueue1.Arn
+             Principal: "*"
+
+    SampleSQSPolicy2: 
+      Type: AWS::SQS::QueuePolicy
+      Properties: 
+
+        Queues: 
+           - !Ref MyQueue2
+        PolicyDocument: 
+          Statement: 
+           - 
+             Action: "sqs:*"
+             Effect: "Allow"
+             Resource: !GetAtt MyQueue2.Arn
+             Principal: "*"
+             
+             
+     
+         
+      

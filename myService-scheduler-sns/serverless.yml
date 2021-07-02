@@ -1,0 +1,44 @@
+
+service: myservice-sns
+
+frameworkVersion: '2'
+
+provider:
+  name: aws
+  runtime: nodejs12.x
+  iamRoleStatements:
+    - Effect: "Allow"
+      Action:
+        - "sns:*"
+      Resource: "*"
+
+
+functions:
+  create:
+    handler: handler.index
+    events:
+     - http:
+         path: users/create
+         method: get
+   
+  # trigger : 
+  #   handler: handler.trigger
+  #   events:
+  #     - sns: my-topic
+
+
+# you can add CloudFormation resource templates here
+resources:
+  Resources:
+    MySNSTopic:
+       Type: AWS::SNS::Topic
+       Properties:
+           TopicName: "my-topic"
+
+    MySubscription:
+     Type: AWS::SNS::Subscription
+     Properties:
+      Endpoint: verylazycoders@gmail.com
+      Protocol: email
+      TopicArn: !Ref 'MySNSTopic'
+  
